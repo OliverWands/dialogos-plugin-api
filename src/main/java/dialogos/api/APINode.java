@@ -47,10 +47,7 @@ public class APINode extends Node
     @Override
     public Node execute(WozInterface wozInterface, InputCenter input, ExecutionLogger logger)
     {
-        request = (String) properties.get(REQUEST);
-        requesttypes = (String) properties.get(REQUEST_TYPES);
-        responsetypes = (String) properties.get(RESPONSE_TYPES);
-        returnvariable = (String) properties.get(RETURN_VARIABLE);
+        setFromProperties();
 
         executeAPI();
 
@@ -80,11 +77,17 @@ public class APINode extends Node
 
             if (requesttypes.equals("Expression"))
             {
-                Expression expression = parseExpression(request);
-                Value value = expression.evaluate();
-                if (value != null)
+                try
                 {
-                    apiRequest = value.toString();
+                    Expression expression = parseExpression(request);
+                    Value value = expression.evaluate();
+                    if (value != null)
+                    {
+                        apiRequest = value.toString().replace("\"", "");
+                    }
+                } catch (Exception exp)
+                {
+                    exp.printStackTrace();
                 }
             }
             else
@@ -133,10 +136,7 @@ public class APINode extends Node
     {
         super.writeAttributes(out, uid_map);
 
-        request = (String) this.getProperty(REQUEST);
-        requesttypes = (String) this.getProperty(REQUEST_TYPES);
-        responsetypes = (String) this.getProperty(RESPONSE_TYPES);
-        returnvariable = (String) this.getProperty(RETURN_VARIABLE);
+        setFromProperties();
 
         if (request != null)
         {
@@ -190,24 +190,17 @@ public class APINode extends Node
 
         Component requestEditor = NodePropertiesDialog.createTextArea(properties, REQUEST);
 
-        JRadioButton[] typeButtons = NodePropertiesDialog.createRadioButtons(
-                properties, REQUEST_TYPES, new String[]{"Plain Text", "Expression"});
-
         JPanel types = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        for (JRadioButton button : typeButtons)
+        for (JRadioButton button : NodePropertiesDialog.createRadioButtons(properties, REQUEST_TYPES, new String[]{"Plain Text", "Expression"}))
         {
             types.add(button);
         }
-        typeButtons[0].setSelected(true);
 
-        JRadioButton[] responseButtons = NodePropertiesDialog.createRadioButtons(
-                properties, RESPONSE_TYPES, rTypes);
         JPanel responses = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        for (JRadioButton button : responseButtons)
+        for (JRadioButton button : NodePropertiesDialog.createRadioButtons(properties, RESPONSE_TYPES, rTypes))
         {
             responses.add(button);
         }
-        responseButtons[0].setSelected(true);
 
         constraints.gridx = 0;
         constraints.gridy = 0;
@@ -304,5 +297,13 @@ public class APINode extends Node
         {
             return false;
         }
+    }
+
+    private void setFromProperties()
+    {
+        request = (String) properties.get(REQUEST);
+        requesttypes = (String) properties.get(REQUEST_TYPES);
+        responsetypes = (String) properties.get(RESPONSE_TYPES);
+        returnvariable = (String) properties.get(RETURN_VARIABLE);
     }
 }
